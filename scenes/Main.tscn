@@ -1,0 +1,113 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://src/GraphView.gd" type="Script" id=1]
+[ext_resource path="res://scenes/PointLabel.tscn" type="PackedScene" id=2]
+[ext_resource path="res://src/Main.gd" type="Script" id=3]
+[ext_resource path="res://src/Variables.gd" type="Script" id=4]
+
+[node name="Main" type="Control"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource( 3 )
+
+[node name="MainView" type="VBoxContainer" parent="."]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="TopBar" type="Panel" parent="MainView"]
+margin_right = 1024.0
+margin_bottom = 28.0
+rect_min_size = Vector2( 0, 28 )
+
+[node name="Spliter" type="HSplitContainer" parent="MainView"]
+margin_top = 32.0
+margin_right = 1024.0
+margin_bottom = 606.0
+
+[node name="Panel" type="Panel" parent="MainView/Spliter"]
+margin_right = 220.0
+margin_bottom = 574.0
+rect_min_size = Vector2( 220, 570 )
+
+[node name="Left" type="VBoxContainer" parent="MainView/Spliter/Panel"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="Commands" type="ColorRect" parent="MainView/Spliter/Panel/Left"]
+margin_right = 220.0
+margin_bottom = 28.0
+rect_min_size = Vector2( 0, 28 )
+color = Color( 0.627451, 0.34902, 0.34902, 1 )
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MainView/Spliter/Panel/Left/Commands"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 4.0
+margin_top = 4.0
+margin_right = -4.0
+margin_bottom = -4.0
+
+[node name="Label" type="Label" parent="MainView/Spliter/Panel/Left/Commands/HBoxContainer"]
+margin_top = 3.0
+margin_right = 188.0
+margin_bottom = 17.0
+size_flags_horizontal = 3
+text = "Commands"
+
+[node name="Button" type="Button" parent="MainView/Spliter/Panel/Left/Commands/HBoxContainer"]
+margin_left = 192.0
+margin_right = 212.0
+margin_bottom = 20.0
+text = "+"
+
+[node name="Variables" type="ColorRect" parent="MainView/Spliter/Panel/Left"]
+margin_top = 32.0
+margin_right = 220.0
+margin_bottom = 60.0
+rect_min_size = Vector2( 0, 28 )
+color = Color( 0.627451, 0.34902, 0.34902, 1 )
+script = ExtResource( 4 )
+
+[node name="HBoxContainer" type="HBoxContainer" parent="MainView/Spliter/Panel/Left/Variables"]
+anchor_right = 1.0
+anchor_bottom = 1.0
+margin_left = 4.0
+margin_top = 4.0
+margin_right = -4.0
+margin_bottom = -4.0
+
+[node name="Label" type="Label" parent="MainView/Spliter/Panel/Left/Variables/HBoxContainer"]
+margin_top = 3.0
+margin_right = 188.0
+margin_bottom = 17.0
+size_flags_horizontal = 3
+text = "Variables"
+
+[node name="AddVariable" type="Button" parent="MainView/Spliter/Panel/Left/Variables/HBoxContainer"]
+margin_left = 192.0
+margin_right = 212.0
+margin_bottom = 20.0
+text = "+"
+
+[node name="Right" type="VBoxContainer" parent="MainView/Spliter"]
+margin_left = 232.0
+margin_right = 1024.0
+margin_bottom = 574.0
+
+[node name="GraphView" type="ColorRect" parent="MainView/Spliter/Right"]
+margin_right = 792.0
+margin_bottom = 530.0
+rect_min_size = Vector2( 0, 530 )
+rect_clip_content = true
+size_flags_vertical = 3
+color = Color( 0, 0, 0, 1 )
+script = ExtResource( 1 )
+label = ExtResource( 2 )
+
+[node name="Panel" type="Panel" parent="MainView/Spliter/Right"]
+margin_top = 534.0
+margin_right = 792.0
+margin_bottom = 574.0
+rect_min_size = Vector2( 0, 40 )
+
+[connection signal="pressed" from="MainView/Spliter/Panel/Left/Variables/HBoxContainer/AddVariable" to="." method="_on_AddVariable_pressed"]
