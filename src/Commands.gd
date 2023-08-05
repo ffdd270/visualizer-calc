@@ -16,7 +16,10 @@ var _project : ProjectData = null
 func _ready():
 	pass # Replace with function body.
 
-func _update_function_list():
+func update_commands():
+	_update_command_list()
+
+func _update_command_list():
 	var commands = _project.get_command_list()
 	commands.sort()
 	
@@ -28,7 +31,7 @@ func _update_function_list():
 		
 		if not fi is FunctionItem:
 			fi = FunctionItemScene.instance()
-			fi.connect("clicked", self, "_on_function_item_clicked", [fi])
+			fi.connect("clicked", self, "_on_command_item_clicked", [fi])
 			_container.add_child(fi)
 			_container.move_child(fi, index)
 			

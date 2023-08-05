@@ -112,5 +112,6 @@ margin_right = 792.0
 margin_bottom = 574.0
 rect_min_size = Vector2( 0, 40 )
 
+[connection signal="pressed" from="MainView/Spliter/Panel/Left/Commands/HBoxContainer/Button" to="." method="_on_AddCommand_pressed"]
 [connection signal="variable_changed" from="MainView/Spliter/Panel/Left/Variables" to="." method="_on_variable_changed"]
 [connection signal="pressed" from="MainView/Spliter/Panel/Left/Variables/HBoxContainer/AddVariable" to="." method="_on_AddVariable_pressed"]

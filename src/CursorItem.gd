@@ -4,7 +4,6 @@ signal clicked
 signal value_changed(new_value)
 signal settings_clicked
 
-
 onready var _label := $HB/Label as Label
 onready var _slider := $HB/HSlider as HSlider
 onready var _spinbox := $HB/SpinBox as SpinBox

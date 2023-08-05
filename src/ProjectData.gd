@@ -17,8 +17,10 @@ var _commands : Array = []
 
 func add_float_variable(number : float):
 	var new_variable = FloatVariable.new()
+	var lenght = len(_variables)
 	new_variable.variable = number
-	new_variable.variable_name = "v" +  str(len(_variables))
+	new_variable.variable_name = "v" +  str(lenght)
+	new_variable.variable_color = Color(1 - (lenght/10),1, 1 - (lenght/10),1)
 	_variables.append(new_variable)
 
 func set_variable(varirable_name : String, value : float):

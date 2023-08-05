@@ -12,12 +12,17 @@ var _grid_color = Color(1, 1, 1, 0.15)
 var _grid_step = Vector2(1, 1)
 var _project = null
 
-var DEFAULT_POINT_SIZE = 0.05 
+var DEFAULT_POINT_SIZE = 0.2
 var points = []
+var render_points = []
+var commands = []
 
 # Engine Callback Functions
 func _ready():
-	pass
+	commands.append(Command.new("c1", "x*2"))
+	commands.append(Command.new("c1", "pow(2, x)"))
+	commands.append(Command.new("c1", "sin(x)+cos(x)"))
+	commands.append(Command.new("c1", "log(x)"))
 
 
 func _gui_input(event):
@@ -69,6 +74,7 @@ func _process(_delta):
 	if Engine.editor_hint:
 		update()
 
+# 특정 노드의 Custom Render를 추가할 수 있어요
 func _draw():	
 	var size = rect_size
 	var step_x = 1.0 / _view_scale.x
@@ -86,30 +92,84 @@ func _draw():
 	for i in len(points):
 		exist_name_hash[points[i].get_text()] = i
 
+	if (_project == null): 
+		return
+
 	# 프로젝트에서 데이터를 가져옴. 새로 온 거면 추가. 
 	var variables = _project.get_variable_list()
+
+	# for v in variables:
+	# 	var value = v.variable
+	# 	var color = v.variable_color
+	# 	var text =  v.variable_name
+	# 	# 지금은 모두 Float이라고 가정
+	# 	var pos = Vector2(value, 0)
+
+	# 	# 있다면 생성
+	# 	if not exist_name_hash.has(text):
+	# 		var point = PointRender.new(pos, color, DEFAULT_POINT_SIZE, text, label, self)
+	# 		points.append(point)
+	# 	else: # 없다면 갱신
+	# 		var index = exist_name_hash[text]
+	# 		points[index].update(pos, color, text)
+
+	# 명령들 실행하기 
+	var expressions = []
+	var var_inputs = []
+	var_inputs.resize(1)
+	for command in commands:
+		var expression := Expression.new()
+		var err = expression.parse(command.command, ["x"])
+		if err != OK:
+			print("Error: ", err)
+			continue
+
+		expressions.append(expression)
+
+	var expression_context = ExpressionContext.new(expressions, var_inputs)
+	# 렌더링 포인트들 초기화
+	for i in render_points:
+		i._label.queue_free()
+
+	render_points = []
 	for v in variables:
 		var value = v.variable
 		var color = v.variable_color
 		var text =  v.variable_name
 		# 지금은 모두 Float이라고 가정
-		var pos = Vector2(value, 0)
+		var pos = Vector2(0, value)
 
-		# 있다면 생성
-		if not exist_name_hash.has(text):
-			var point = PointRender.new(pos, color, DEFAULT_POINT_SIZE, text, label, self)
-			points.append(point)
-		else: # 없다면 갱신
-			var index = exist_name_hash[text]
-			points[index].update(pos, color, text)
+		var origin_text = text + ":" + str(value)
+		render_points.append(PointRender.new(pos, color, DEFAULT_POINT_SIZE, origin_text, label, self))
 
-	# 점 그리기
-	for i in points:
-		var pixel_pos = (i.get_pos()) * _view_scale
+		var exp_count = 0
+		for expression in expressions:
+			var_inputs[0] = value
+			var result = expression.execute(var_inputs, expression_context, false)
+			var c_pos = Vector2(exp_count + 1, result)
+			value = result
+			var new_text = text + ":" +  str(result) + ":" + commands[exp_count].command
+			render_points.append(PointRender.new(c_pos, color, DEFAULT_POINT_SIZE, new_text, label, self))
+			exp_count = exp_count + 1
+
+
+	# 시작점 그리기
+	for i in render_points:
+		var gpos = i.get_pos()
+		#gpos.y -= _view_offset.y
+		
+		var pixel_pos = (gpos) * _view_scale
+	
+		#var pixel_pos = _grpah_to_pixel_position(i.get_pos())
+
+		var label_offset = Vector2(20, 40)
+		label_offset = label_offset #* _view_scale
+		pixel_pos += label_offset
+
 		var parent_pos = size / 2 + pixel_view_offset 
-		var label_offset = Vector2(0, 5)
 
-		i._label.rect_position = parent_pos + pixel_pos + label_offset
+		pixel_pos.y = - pixel_pos.y
+		i._label.rect_position = parent_pos + pixel_pos 
 		draw_circle(i.get_pos()*_grid_step, i.get_size(), i.get_color())
 
 
@@ -118,6 +178,9 @@ func _draw():
 
 func _pixel_to_graph_position(ppos):
 	return (Vector2(ppos.x, rect_size.y - ppos.y) - rect_size / 2) / _view_scale + _view_offset
+
+func _grpah_to_pixel_position(gpos):
+	return (Vector2(gpos.x, gpos.y) + rect_size / 2) * _view_scale - _view_offset
 
 # Publics 
 func set_project(project):
@@ -166,3 +229,60 @@ class PointRender:
 		_color = color
 		_text = text
 		_label.text = _text
+
+class Command: 
+	var command_name = ""
+	var command = ""
+
+	func _init(command_name, command):
+		self.command_name = command_name
+		self.command = command
+
+
+class CommandsExecutedPoint:
+	var points : Array = []
+
+	func _init():
+		pass
+	
+
+# Oh joy, Expression's function binding is class based.
+class ExpressionContext:
+	var _expressions : Array
+	var _var_inputs : Array
+	
+	func _init(expressions, var_inputs):
+		_var_inputs = var_inputs
+		_expressions = expressions
+		
+	func _internal_exec(i: int, x: float):
+		var e = _expressions[i]
+		if e == null:
+			return
+		var args = _var_inputs.duplicate()
+		args[0] = x
+		return e.execute(args, self, false)
+		
+	func f(x):
+		return _internal_exec(0, x)
+
+	func g(x):
+		return _internal_exec(1, x)
+
+	func h(x):
+		return _internal_exec(2, x)
+
+	func i(x):
+		return _internal_exec(3, x)
+
+	func j(x):
+		return _internal_exec(4, x)
+
+	func k(x):
+		return _internal_exec(5, x)
+
+	func l(x):
+		return _internal_exec(6, x)
+
+	func m(x):
+		return _internal_exec(7, x)
