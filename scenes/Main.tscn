@@ -1,9 +1,10 @@
-[gd_scene load_steps=5 format=2]
+[gd_scene load_steps=6 format=2]
 
 [ext_resource path="res://src/GraphView.gd" type="Script" id=1]
 [ext_resource path="res://scenes/PointLabel.tscn" type="PackedScene" id=2]
 [ext_resource path="res://src/Main.gd" type="Script" id=3]
 [ext_resource path="res://src/Variables.gd" type="Script" id=4]
+[ext_resource path="res://src/Commands.gd" type="Script" id=5]
 
 [node name="Main" type="Control"]
 anchor_right = 1.0
@@ -38,6 +39,7 @@ margin_right = 220.0
 margin_bottom = 28.0
 rect_min_size = Vector2( 0, 28 )
 color = Color( 0.627451, 0.34902, 0.34902, 1 )
+script = ExtResource( 5 )
 
 [node name="HBoxContainer" type="HBoxContainer" parent="MainView/Spliter/Panel/Left/Commands"]
 anchor_right = 1.0
@@ -110,4 +112,5 @@ margin_right = 792.0
 margin_bottom = 574.0
 rect_min_size = Vector2( 0, 40 )
 
+[connection signal="variable_changed" from="MainView/Spliter/Panel/Left/Variables" to="." method="_on_variable_changed"]
 [connection signal="pressed" from="MainView/Spliter/Panel/Left/Variables/HBoxContainer/AddVariable" to="." method="_on_AddVariable_pressed"]

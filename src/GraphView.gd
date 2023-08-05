@@ -17,11 +17,22 @@ var points = []
 
 # Engine Callback Functions
 func _ready():
-	points.append( PointRender.new(Vector2(0 , 0), Color(1, 1, 1, 1), 0.05, "v1", label, self) )
-	points.append( PointRender.new(Vector2(0.5, 0), Color(0.5, 1, 0.5, 1), 0.05, "v2", label, self) )
-	points.append( PointRender.new(Vector2(1, 0), Color(0.5, 0.5, 0.5, 1), 0.05, "v3", label, self) )
+	pass
 
 
+func _gui_input(event):
+	if event is InputEventMouseMotion:
+		if Input.is_mouse_button_pressed(BUTTON_MIDDLE):
+			_view_offset += Vector2(-event.relative.x, event.relative.y) / _view_scale
+			update()
+	elif event is InputEventMouseButton:
+		var factor = 1.1
+		match event.button_index:
+			BUTTON_WHEEL_UP:
+				_add_zoom(factor, event.position)
+			BUTTON_WHEEL_DOWN:
+				_add_zoom(1.0 / factor, event.position)
+				
 func _draw_grid():
 	var step = _grid_step
 	# 그래프 최소값? 
@@ -70,16 +81,36 @@ func _draw():
 	# 격자 그리기
 	_draw_grid()
 
+	# 이미 있는 노드 탐색.
+	var exist_name_hash = {}
+	for i in len(points):
+		exist_name_hash[points[i].get_text()] = i
+
+	# 프로젝트에서 데이터를 가져옴. 새로 온 거면 추가. 
+	var variables = _project.get_variable_list()
+	for v in variables:
+		var value = v.variable
+		var color = v.variable_color
+		var text =  v.variable_name
+		# 지금은 모두 Float이라고 가정
+		var pos = Vector2(value, 0)
+
+		# 있다면 생성
+		if not exist_name_hash.has(text):
+			var point = PointRender.new(pos, color, DEFAULT_POINT_SIZE, text, label, self)
+			points.append(point)
+		else: # 없다면 갱신
+			var index = exist_name_hash[text]
+			points[index].update(pos, color, text)
+
 	# 점 그리기
 	for i in points:
-		var pixel_pos = (i._pos) * _view_scale
+		var pixel_pos = (i.get_pos()) * _view_scale
 		var parent_pos = size / 2 + pixel_view_offset 
 		var label_offset = Vector2(0, 5)
+
 		i._label.rect_position = parent_pos + pixel_pos + label_offset
-		#i._label.scale = Vector2(_view_scale.x, -_view_scale.y)
-		#i._label.rect_position.x = pixel_pos.x
-		#i._label.rect_position.y = pixel_pos.y
-		draw_circle(i._pos*_grid_step, i._size, i._color)
+		draw_circle(i.get_pos()*_grid_step, i.get_size(), i.get_color())
 
 
 # --- User Defined Functions
@@ -93,6 +124,13 @@ func set_project(project):
 	_project = project
 	
 
+func _add_zoom(factor, mpos):
+	var gpos = _pixel_to_graph_position(mpos)
+	_view_scale *= factor
+	var gpos2 = _pixel_to_graph_position(mpos)
+	_view_offset += gpos - gpos2
+	update()
+	
 # --- Render Data Classes
 
 class PointRender:
@@ -111,3 +149,20 @@ class PointRender:
 		_label.text = _text
 		parent.add_child(_label)
 
+	func get_text():
+		return _text
+
+	func get_pos():
+		return _pos
+
+	func get_size():
+		return _size
+
+	func get_color():
+		return _color
+
+	func update(pos : Vector2, color : Color, text : String):
+		_pos = pos
+		_color = color
+		_text = text
+		_label.text = _text
